@@ -88,6 +88,11 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Favicon handler (prevents 404 in logs)
+app.get("/favicon.ico", (req, res) => {
+  res.status(204).end();
+});
+
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/halls", require("./routes/halls"));
