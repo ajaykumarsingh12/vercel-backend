@@ -62,12 +62,10 @@ const userSchema = new mongoose.Schema(
     googleId: {
       type: String,
       sparse: true,
-      unique: true,
     },
     appleId: {
       type: String,
       sparse: true,
-      unique: true,
     },
     avatar: {
       type: String,
@@ -115,9 +113,9 @@ userSchema.index({ role: 1 });
 // Index for blocked user checks
 userSchema.index({ isBlocked: 1 });
 
-// Compound index for OAuth lookups
-userSchema.index({ googleId: 1 }, { sparse: true });
-userSchema.index({ appleId: 1 }, { sparse: true });
+// Unique sparse indexes for OAuth lookups (prevents duplicates)
+userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
+userSchema.index({ appleId: 1 }, { unique: true, sparse: true });
 
 // Index for favorites array queries
 userSchema.index({ favorites: 1 });
