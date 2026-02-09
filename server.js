@@ -7,15 +7,58 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ============================================
+// MONGODB CONNECTION (Serverless Optimized)
+// ============================================
+let isConnected = false;
 
+const connectDB = async () => {
+  if (isConnected && mongoose.connection.readyState === 1) {
+    console.log('✅ Using existing MongoDB connection');
+    return;
+  }
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+    });
+    
+    isConnected = true;
+    console.log('✅ MongoDB connected successfully');
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error.message);
+    isConnected = false;
+    // Don't throw error - let API respond even if DB is down
+  }
+};
+
+// Middleware to ensure DB connection before each request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('DB connection middleware error:', error);
+    next();
+  }
+});
+
+// ============================================
+// MIDDLEWARE
+// ============================================
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ============================================
+// ROOT ROUTE - Welcome Page
+// ============================================
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "BookMyHall API is running!",
+    message: "🎉 BookMyHall API is running!",
     version: "1.0.0",
     endpoints: {
       health: "/api/health",
@@ -31,21 +74,34 @@ app.get("/", (req, res) => {
       ownerRevenue: "/api/owner-revenue"
     },
     documentation: "https://github.com/yourusername/bookmyhall",
-    status: "operational"
+    status: "operational",
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const dbStatusText = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  }[dbStatus] || 'unknown';
+
   res.json({
     success: true,
     message: "Server is running",
-    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    database: dbStatusText,
     uptime: process.uptime(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
+// ============================================
+// API ROUTES
+// ============================================
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/halls", require("./routes/halls"));
@@ -57,7 +113,9 @@ app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/hallalloted", require("./routes/hallAlloted"));
 app.use("/api/owner-revenue", require("./routes/ownerRevenue"));
 
-
+// ============================================
+// ERROR HANDLING
+// ============================================
 
 // 404 handler - Route not found
 app.use((req, res) => {
@@ -76,6 +134,7 @@ app.use((req, res) => {
       "/api/reviews",
       "/api/payments",
       "/api/admin",
+      "/api/notifications",
       "/api/hallalloted",
       "/api/owner-revenue"
     ]
@@ -84,42 +143,40 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('❌ Error:', err.message);
+  
   res.status(err.status || 500).json({
     success: false,
     message: process.env.NODE_ENV === 'production' 
       ? 'Internal server error' 
       : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    ...(process.env.NODE_ENV !== 'production' && { 
+      stack: err.stack,
+      error: err.toString()
+    })
   });
 });
 
-
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected successfully");
-    
-    // Only start server if not in Vercel (Vercel handles this)
-    if (process.env.VERCEL !== '1') {
-      const PORT = process.env.PORT || 5000;
-      app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      });
-    }
-  })
-  .catch((error) => {
-    console.error("MongoDB connection error:", error);
+// ============================================
+// SERVER START (Local Development Only)
+// ============================================
+if (process.env.VERCEL !== '1' && require.main === module) {
+  connectDB().then(() => {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🗄️  Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+    });
+  }).catch(error => {
+    console.error('❌ Failed to start server:', error);
     process.exit(1);
   });
+}
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
-  if (process.env.VERCEL !== '1') {
-    process.exit(1);
-  }
+  console.error('❌ Unhandled Rejection:', err);
 });
 
 // Export for Vercel
