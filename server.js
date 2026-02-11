@@ -104,6 +104,7 @@ app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/hallalloted", require("./routes/hallAlloted"));
 app.use("/api/owner-revenue", require("./routes/ownerRevenue"));
 app.use("/api/geocoding", require("./routes/geocoding"));
+app.use("/api/favourites", require("./routes/favourites"));
 
 
 // 404 handler - Route not found

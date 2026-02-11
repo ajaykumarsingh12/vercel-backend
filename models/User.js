@@ -52,12 +52,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    favorites: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Hall",
-      },
-    ],
     // OAuth fields
     googleId: {
       type: String,
@@ -116,8 +110,5 @@ userSchema.index({ isBlocked: 1 });
 // Unique sparse indexes for OAuth lookups (prevents duplicates)
 userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
 userSchema.index({ appleId: 1 }, { unique: true, sparse: true });
-
-// Index for favorites array queries
-userSchema.index({ favorites: 1 });
 
 module.exports = mongoose.model("User", userSchema);

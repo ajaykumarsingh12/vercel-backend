@@ -90,7 +90,6 @@ router.post(
           bio: user.bio,
           dateOfBirth: user.dateOfBirth,
           avatar: user.avatar,
-          favorites: user.favorites || [],
         },
       });
     } catch (error) {
@@ -158,7 +157,6 @@ router.post(
           bio: user.bio,
           dateOfBirth: user.dateOfBirth,
           avatar: user.avatar,
-          favorites: user.favorites || [],
         },
       });
     } catch (error) {
@@ -191,7 +189,6 @@ router.get("/me", auth, async (req, res) => {
         bio: req.user.bio,
         dateOfBirth: req.user.dateOfBirth,
         avatar: req.user.avatar,
-        favorites: req.user.favorites || [],
       },
     });
   } catch (error) {
@@ -236,7 +233,6 @@ router.put("/profile", auth, async (req, res) => {
         bio: user.bio,
         dateOfBirth: user.dateOfBirth,
         avatar: user.avatar,
-        favorites: user.favorites || [],
       },
     });
   } catch (error) {

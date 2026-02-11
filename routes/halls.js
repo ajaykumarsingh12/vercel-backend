@@ -317,53 +317,6 @@ router.delete("/:id", auth, async (req, res) => {
 // @route POST /api/halls/:id/favorite
 // @desc Toggle favorite status for a hall
 // @access Private
-router.post("/:id/favorite", auth, async (req, res) => {
-  try {
-    const User = require("../models/User");
-    const user = await User.findById(req.user._id);
-    const hallId = req.params.id;
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const index = user.favorites.indexOf(hallId);
-    if (index === -1) {
-      user.favorites.push(hallId);
-      await user.save();
-      res.json({ message: "Hall added to favorites", isFavorite: true });
-    } else {
-      user.favorites.splice(index, 1);
-      await user.save();
-      res.json({ message: "Hall removed from favorites", isFavorite: false });
-    }
-  } catch (error) {
-        res.status(500).json({ message: "Server error" });
-  }
-});
-
-// @route GET /api/halls/favorites/all
-// @desc Get all favorite halls for the current user
-// @access Private
-router.get("/favorites/all", auth, async (req, res) => {
-  try {
-    const User = require("../models/User");
-    const user = await User.findById(req.user._id).populate({
-      path: "favorites",
-      model: "Hall",
-      populate: { path: "owner", select: "name email phone" }
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(user.favorites);
-  } catch (error) {
-        res.status(500).json({ message: "Server error" });
-  }
-});
-
 // @route GET /api/halls/:id/analytics
 // @desc Get hall analytics (bookings, revenue trends)
 // @access Private (Hall Owner or Admin)
