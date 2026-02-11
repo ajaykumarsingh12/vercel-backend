@@ -90,10 +90,9 @@ favouriteSchema.statics.toggleFavorite = async function (userId, hallId) {
   const existing = await this.findOne({ user: userId, hall: hallId });
 
   if (existing) {
-    // Toggle isActive status
-    existing.isActive = !existing.isActive;
-    await existing.save();
-    return { favorited: existing.isActive, favorite: existing };
+    // Hard delete - completely remove from database
+    await this.deleteOne({ _id: existing._id });
+    return { favorited: false, favorite: null };
   } else {
     // Create new favorite
     const favorite = await this.create({ user: userId, hall: hallId });
