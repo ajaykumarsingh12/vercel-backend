@@ -10,7 +10,7 @@ let isConnected = false;
 
 const connectDB = async () => {
   if (isConnected && mongoose.connection.readyState === 1) {
-    console.log('✅ Using existing MongoDB connection');
+    // Connection already exists - no need to log every time
     return;
   }
 
@@ -22,7 +22,7 @@ const connectDB = async () => {
     });
     
     isConnected = true;
-    console.log(' MongoDB connected successfully');
+    console.log('✅ MongoDB connected successfully');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     isConnected = false;

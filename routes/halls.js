@@ -40,9 +40,24 @@ router.get("/", async (req, res) => {
   try {
     const { city, state, minPrice, maxPrice, capacity, limit } = req.query;
 
+    // DEBUG: Log all halls in database
+    const allHalls = await Hall.find();
+    console.log('📊 Total halls in database:', allHalls.length);
+    console.log('📊 Halls by status:', {
+      approved: allHalls.filter(h => h.isApproved === 'approved').length,
+      pending: allHalls.filter(h => h.isApproved === 'pending').length,
+      rejected: allHalls.filter(h => h.isApproved === 'rejected').length,
+      undefined: allHalls.filter(h => !h.isApproved).length,
+    });
+
     const filter = {
       $and: [
-        { isApproved: "approved" },
+        // TEMPORARY: Show all halls for development
+        { $or: [
+          { isApproved: "approved" },
+          { isApproved: "pending" },
+          { isApproved: { $exists: false } }
+        ]},
         { $or: [{ isAvailable: true }, { isAvailable: { $exists: false } }] },
       ],
     };
