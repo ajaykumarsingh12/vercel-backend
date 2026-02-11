@@ -35,10 +35,10 @@ router.get("/stats", async (req, res) => {
             _id: null,
             total: { $sum: 1 },
             approved: {
-              $sum: { $cond: [{ $eq: ["$isApproved", true] }, 1, 0] }
+              $sum: { $cond: [{ $eq: ["$isApproved", "approved"] }, 1, 0] }
             },
             pending: {
-              $sum: { $cond: [{ $eq: ["$isApproved", false] }, 1, 0] }
+              $sum: { $cond: [{ $eq: ["$isApproved", "pending"] }, 1, 0] }
             }
           }
         }
@@ -223,8 +223,15 @@ router.put("/users/:id/block", async (req, res) => {
 router.get("/halls", async (req, res) => {
   try {
     const { isApproved } = req.query;
-    const filter =
-      isApproved !== undefined ? { isApproved: isApproved === "true" } : {};
+    let filter = {};
+    
+    if (isApproved !== undefined) {
+      if (isApproved === "true") {
+        filter.isApproved = "approved";
+      } else if (isApproved === "false") {
+        filter.isApproved = "pending";
+      }
+    }
 
     // ✅ OPTIMIZED: Use lean() for read-only queries
     const halls = await Hall.find(filter)
@@ -251,7 +258,8 @@ router.put("/halls/:id/approve", async (req, res) => {
       return res.status(404).json({ message: "Hall not found" });
     }
 
-    hall.isApproved = isApproved;
+    // Convert boolean to string status
+    hall.isApproved = isApproved ? 'approved' : 'rejected';
     await hall.save();
 
     await hall.populate("owner", "name email");

@@ -42,7 +42,7 @@ router.get("/", async (req, res) => {
 
     const filter = {
       $and: [
-        { $or: [{ isApproved: true }, { isApproved: { $exists: false } }] },
+        { isApproved: "approved" },
         { $or: [{ isAvailable: true }, { isAvailable: { $exists: false } }] },
       ],
     };
@@ -208,6 +208,9 @@ router.post(
           : [],
       };
 
+      // Remove isApproved if it exists in req.body to ensure it's undefined (pending)
+      delete hallData.isApproved;
+
       const hall = new Hall(hallData);
       await hall.save();
 
@@ -271,6 +274,14 @@ router.put(
         ...req.body,
         images: updatedImages,
       };
+
+      // Remove isApproved from update data - only admin can change approval status
+      delete updateData.isApproved;
+
+      // If hall was rejected, reset to pending for admin re-review
+      if (hall.isApproved === "rejected" || hall.isApproved === false) {
+        hall.isApproved = "pending";
+      }
 
       Object.assign(hall, updateData);
       await hall.save();

@@ -19,7 +19,7 @@ async function verifyIndexes() {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Connected to MongoDB\n');
+    console.log('Connected to MongoDB\n');
 
     // Get indexes for each collection
     const collections = [
@@ -32,7 +32,7 @@ async function verifyIndexes() {
       { name: 'OwnerRevenue', model: OwnerRevenue }
     ];
 
-    console.log('📊 CHECKING INDEXES FOR ALL COLLECTIONS\n');
+    console.log('CHECKING INDEXES FOR ALL COLLECTIONS\n');
     console.log('='.repeat(60));
 
     for (const collection of collections) {
@@ -48,10 +48,10 @@ async function verifyIndexes() {
     }
 
     console.log('\n' + '='.repeat(60));
-    console.log('\n✅ All indexes verified successfully!\n');
+    console.log('\n All indexes verified successfully!\n');
 
     // Test a query with explain
-    console.log('🔍 TESTING QUERY PERFORMANCE\n');
+    console.log(' TESTING QUERY PERFORMANCE\n');
     console.log('='.repeat(60));
 
     // Test Hall query
@@ -66,19 +66,19 @@ async function verifyIndexes() {
     console.log(`  Index Used: ${hallExplain.executionStats.executionStages.indexName || 'COLLSCAN (no index)'}`);
 
     if (hallExplain.executionStats.executionTimeMillis < 50) {
-      console.log('  ✅ Query is FAST!');
+      console.log('  Query is FAST!');
     } else {
-      console.log('  ⚠️  Query could be faster');
+      console.log('  Query could be faster');
     }
 
     console.log('\n' + '='.repeat(60));
-    console.log('\n🎉 Verification complete!\n');
+    console.log('\nVerification complete!\n');
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
   } finally {
     await mongoose.connection.close();
-    console.log('✅ Database connection closed\n');
+    console.log('Database connection closed\n');
   }
 }
 

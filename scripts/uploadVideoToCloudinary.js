@@ -26,15 +26,15 @@ async function uploadVideo() {
       ]
     });
 
-    console.log('✅ Video uploaded successfully!');
-    console.log('📹 Video URL:', result.secure_url);
-    console.log('🖼️  Thumbnail URL:', result.secure_url.replace('.mp4', '.jpg'));
-    console.log('\n📋 Copy this URL to your HeroSection.jsx:');
+    console.log('Video uploaded successfully!');
+    console.log('Video URL:', result.secure_url);
+    console.log('Thumbnail URL:', result.secure_url.replace('.mp4', '.jpg'));
+    console.log('\n Copy this URL to your HeroSection.jsx:');
     console.log(`src: "${result.secure_url}",`);
     console.log(`poster: "${result.secure_url.replace('.mp4', '.jpg')}"`);
     
   } catch (error) {
-    console.error('❌ Error uploading video:', error.message);
+    console.error(' Error uploading video:', error.message);
   }
 }
 
