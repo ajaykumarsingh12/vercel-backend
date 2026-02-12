@@ -445,11 +445,18 @@ router.post("/google", async (req, res) => {
         });
       }
 
+      // Update role if explicitly provided and different from current role
+      // Only allow switching between user and hall_owner (not admin)
+      if (role && (role === "user" || role === "hall_owner") && user.role !== role && user.role !== "admin") {
+        user.role = role;
+      }
+
       // Update profile image if not set
       if (!user.profileImage && picture) {
         user.profileImage = picture;
-        await user.save();
       }
+
+      await user.save();
     } else {
       // Validate role (only user or hall_owner allowed)
       const userRole = role === "hall_owner" ? "hall_owner" : "user";
@@ -537,6 +544,14 @@ router.post("/apple", async (req, res) => {
           isBlocked: true,
         });
       }
+
+      // Update role if explicitly provided and different from current role
+      // Only allow switching between user and hall_owner (not admin)
+      if (role && (role === "user" || role === "hall_owner") && user.role !== role && user.role !== "admin") {
+        user.role = role;
+      }
+
+      await user.save();
     } else {
       // Validate role (only user or hall_owner allowed)
       const userRole = role === "hall_owner" ? "hall_owner" : "user";
