@@ -20,7 +20,7 @@ const createAdmin = async () => {
 
     // Validate that environment variables are set
     if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
-      console.log('\n⚠️  WARNING: Admin credentials not found in .env file!');
+      console.log('\nWARNING: Admin credentials not found in .env file!');
       console.log('\nPlease add these to your backend/.env file:');
       console.log('ADMIN_NAME=Your Name');
       console.log('ADMIN_EMAIL=your.email@example.com');
@@ -32,7 +32,7 @@ const createAdmin = async () => {
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: adminData.email });
     if (existingAdmin) {
-      console.log('\n⚠️  Admin with this email already exists!');
+      console.log('\n Admin with this email already exists!');
       console.log(`Email: ${existingAdmin.email}`);
       console.log(`Role: ${existingAdmin.role}`);
       console.log(`Name: ${existingAdmin.name}`);
@@ -51,7 +51,7 @@ const createAdmin = async () => {
     console.log(`Phone: ${admin.phone}`);
     console.log(`Role:  ${admin.role}`);
     console.log('================================');
-    console.log('\n📝 NEXT STEPS:');
+    console.log('\nNEXT STEPS:');
     console.log('1. Login at: /admin/login');
     console.log('2. Change your password immediately after first login');
     console.log('3. Remove admin credentials from .env file for security');
@@ -59,9 +59,9 @@ const createAdmin = async () => {
 
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Error creating admin:', error.message);
+    console.error('\nError creating admin:', error.message);
     if (error.name === 'ValidationError') {
-      console.error('\n📋 Validation errors:');
+      console.error('\nValidation errors:');
       Object.keys(error.errors).forEach(key => {
         console.error(`   - ${key}: ${error.errors[key].message}`);
       });
