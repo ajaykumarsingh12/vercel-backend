@@ -42,8 +42,8 @@ router.get("/", async (req, res) => {
 
     // DEBUG: Log all halls in database
     const allHalls = await Hall.find();
-    console.log('📊 Total halls in database:', allHalls.length);
-    console.log('📊 Halls by status:', {
+    console.log('Total halls in database:', allHalls.length);
+    console.log('Halls by status:', {
       approved: allHalls.filter(h => h.isApproved === 'approved').length,
       pending: allHalls.filter(h => h.isApproved === 'pending').length,
       rejected: allHalls.filter(h => h.isApproved === 'rejected').length,
@@ -66,7 +66,7 @@ router.get("/", async (req, res) => {
       if (maxPrice) filter.pricePerHour.$lte = Number(maxPrice);
     }
 
-    console.log('🔍 Filter being applied:', JSON.stringify(filter, null, 2));
+    console.log('Filter being applied:', JSON.stringify(filter, null, 2));
 
     let query = Hall.find(filter).sort({ createdAt: -1 });
 
@@ -77,12 +77,12 @@ router.get("/", async (req, res) => {
 
     const halls = await query;
     
-    console.log('✅ Halls returned:', halls.length);
-    console.log('✅ Halls approval status:', halls.map(h => ({ name: h.name, isApproved: h.isApproved })));
+    console.log(' Halls returned:', halls.length);
+    console.log('Halls approval status:', halls.map(h => ({ name: h.name, isApproved: h.isApproved })));
 
     res.json(halls);
   } catch (error) {
-    console.error('❌ Error in GET /api/halls:', error);
+    console.error('Error in GET /api/halls:', error);
     res.status(500).json({ message: "Server error" });
   }
 });

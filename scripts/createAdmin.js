@@ -44,7 +44,7 @@ const createAdmin = async () => {
     const admin = new User(adminData);
     await admin.save();
 
-    console.log('\n✅ SUCCESS! Admin account created!');
+    console.log('\nSUCCESS! Admin account created!');
     console.log('================================');
     console.log(`Name:  ${admin.name}`);
     console.log(`Email: ${admin.email}`);
@@ -55,7 +55,7 @@ const createAdmin = async () => {
     console.log('1. Login at: /admin/login');
     console.log('2. Change your password immediately after first login');
     console.log('3. Remove admin credentials from .env file for security');
-    console.log('\n✅ You can now access the admin dashboard!\n');
+    console.log('\n You can now access the admin dashboard!\n');
 
     process.exit(0);
   } catch (error) {

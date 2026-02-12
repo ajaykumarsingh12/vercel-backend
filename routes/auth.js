@@ -395,3 +395,182 @@ router.post("/request-unblock", async (req, res) => {
 });
 
 module.exports = router;
+
+// @route POST /api/auth/google
+// @desc Google OAuth login
+// @access Public
+router.post("/google", async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: "Google credential is required",
+      });
+    }
+
+    // Verify Google token
+    const fetch = require("node-fetch");
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
+    );
+    const googleUser = await response.json();
+
+    if (googleUser.error) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Google token",
+      });
+    }
+
+    const { email, name, picture } = googleUser;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email not provided by Google",
+      });
+    }
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Check if user is blocked
+      if (user.isBlocked) {
+        return res.status(403).json({
+          message: "Your account has been blocked. Please contact support for assistance.",
+          isBlocked: true,
+        });
+      }
+
+      // Update profile image if not set
+      if (!user.profileImage && picture) {
+        user.profileImage = picture;
+        await user.save();
+      }
+    } else {
+      // Create new user with Google data
+      user = new User({
+        name: name || email.split("@")[0],
+        email,
+        password: Math.random().toString(36).slice(-8) + "Aa1!", // Random password (won't be used)
+        role: "user", // Default role for Google sign-in
+        profileImage: picture,
+        avatar: picture,
+      });
+
+      await user.save();
+    }
+
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        address: user.address,
+        businessName: user.businessName,
+        department: user.department,
+        profileImage: user.profileImage,
+        bio: user.bio,
+        dateOfBirth: user.dateOfBirth,
+        avatar: user.avatar,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Google login failed. Please try again.",
+    });
+  }
+});
+
+// @route POST /api/auth/apple
+// @desc Apple Sign In
+// @access Public
+router.post("/apple", async (req, res) => {
+  try {
+    const { identityToken, user: appleUser } = req.body;
+
+    if (!identityToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Apple identity token is required",
+      });
+    }
+
+    // Decode the identity token (JWT)
+    const jwt = require("jsonwebtoken");
+    const decoded = jwt.decode(identityToken);
+
+    if (!decoded || !decoded.email) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Apple token",
+      });
+    }
+
+    const { email, sub: appleId } = decoded;
+    const name = appleUser?.name
+      ? `${appleUser.name.firstName || ""} ${appleUser.name.lastName || ""}`.trim()
+      : email.split("@")[0];
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Check if user is blocked
+      if (user.isBlocked) {
+        return res.status(403).json({
+          message: "Your account has been blocked. Please contact support for assistance.",
+          isBlocked: true,
+        });
+      }
+    } else {
+      // Create new user with Apple data
+      user = new User({
+        name,
+        email,
+        password: Math.random().toString(36).slice(-8) + "Aa1!", // Random password (won't be used)
+        role: "user", // Default role for Apple sign-in
+      });
+
+      await user.save();
+    }
+
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        address: user.address,
+        businessName: user.businessName,
+        department: user.department,
+        profileImage: user.profileImage,
+        bio: user.bio,
+        dateOfBirth: user.dateOfBirth,
+        avatar: user.avatar,
+      },
+    });
+  } catch (error) {
+    console.error("Apple login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Apple login failed. Please try again.",
+    });
+  }
+});
