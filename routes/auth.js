@@ -401,7 +401,7 @@ module.exports = router;
 // @access Public
 router.post("/google", async (req, res) => {
   try {
-    const { credential, role } = req.body;
+    const { credential, role, sessionId } = req.body;
 
     if (!credential) {
       return res.status(400).json({
@@ -409,6 +409,23 @@ router.post("/google", async (req, res) => {
         message: "Google credential is required",
       });
     }
+
+    // If sessionId provided, retrieve role from database
+    let selectedRole = role;
+    if (sessionId) {
+      try {
+        const OnlineUser = require("../models/OnlineUser");
+        const onlineUser = await OnlineUser.findOne({ sessionId });
+        if (onlineUser) {
+          selectedRole = onlineUser.selectedRole;
+          console.log('🔵 Retrieved role from session:', selectedRole);
+        }
+      } catch (error) {
+        console.error('Failed to retrieve session:', error);
+      }
+    }
+
+    console.log('🔵 Final selected role:', selectedRole);
 
     // Verify Google token
     const fetch = require("node-fetch");
@@ -437,7 +454,7 @@ router.post("/google", async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      console.log('🔵 Existing user found:', email, 'Current role:', user.role, 'Requested role:', role);
+      console.log('🔵 Existing user found:', email, 'Current role:', user.role, 'Requested role:', selectedRole);
       
       // Check if user is blocked
       if (user.isBlocked) {
@@ -449,9 +466,9 @@ router.post("/google", async (req, res) => {
 
       // Update role if explicitly provided and different from current role
       // Only allow switching between user and hall_owner (not admin)
-      if (role && (role === "user" || role === "hall_owner") && user.role !== role && user.role !== "admin") {
-        console.log('🔵 Updating role from', user.role, 'to', role);
-        user.role = role;
+      if (selectedRole && (selectedRole === "user" || selectedRole === "hall_owner") && user.role !== selectedRole && user.role !== "admin") {
+        console.log('🔵 Updating role from', user.role, 'to', selectedRole);
+        user.role = selectedRole;
       }
 
       // Update profile image if not set
@@ -463,7 +480,7 @@ router.post("/google", async (req, res) => {
       console.log('🔵 User saved with role:', user.role);
     } else {
       // Validate role (only user or hall_owner allowed)
-      const userRole = role === "hall_owner" ? "hall_owner" : "user";
+      const userRole = selectedRole === "hall_owner" ? "hall_owner" : "user";
       console.log('🔵 Creating new user with role:', userRole);
 
       // Create new user with Google data
