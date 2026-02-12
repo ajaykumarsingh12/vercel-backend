@@ -50,16 +50,9 @@ router.get("/", async (req, res) => {
       undefined: allHalls.filter(h => !h.isApproved).length,
     });
 
+    // Build filter - ONLY show approved halls on public pages
     const filter = {
-      $and: [
-        // TEMPORARY: Show all halls for development
-        { $or: [
-          { isApproved: "approved" },
-          { isApproved: "pending" },
-          { isApproved: { $exists: false } }
-        ]},
-        { $or: [{ isAvailable: true }, { isAvailable: { $exists: false } }] },
-      ],
+      isApproved: "approved"
     };
 
     if (city) filter["location.city"] = new RegExp(`^${city}$`, "i");
@@ -73,6 +66,8 @@ router.get("/", async (req, res) => {
       if (maxPrice) filter.pricePerHour.$lte = Number(maxPrice);
     }
 
+    console.log('🔍 Filter being applied:', JSON.stringify(filter, null, 2));
+
     let query = Hall.find(filter).sort({ createdAt: -1 });
 
     // Add limit if specified
@@ -81,10 +76,14 @@ router.get("/", async (req, res) => {
     }
 
     const halls = await query;
+    
+    console.log('✅ Halls returned:', halls.length);
+    console.log('✅ Halls approval status:', halls.map(h => ({ name: h.name, isApproved: h.isApproved })));
 
     res.json(halls);
   } catch (error) {
-        res.status(500).json({ message: "Server error" });
+    console.error('❌ Error in GET /api/halls:', error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
