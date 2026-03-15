@@ -418,7 +418,34 @@ Thank you for choosing BookMyHall!
   }
 };
 
+// Send Telegram notification to admin
+const sendTelegramNotification = async (message) => {
+  try {
+    if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
+      console.log('📱 Telegram not configured - skipping');
+      return { success: false };
+    }
+
+    const axios = require('axios');
+    await axios.post(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        chat_id: process.env.TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML',
+      }
+    );
+
+    console.log('✅ Telegram notification sent to admin');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Telegram error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendBookingNotificationEmail,
-  sendBookingConfirmationToCustomer
+  sendBookingConfirmationToCustomer,
+  sendTelegramNotification,
 };

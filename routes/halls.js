@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const Hall = require("../models/Hall");
 const { auth, authorize } = require("../middleware/auth");
 const { hallStorage } = require("../config/cloudinary");
+const { sendTelegramNotification } = require("../utils/emailService");
 
 const router = express.Router();
 
@@ -263,6 +264,19 @@ router.post(
 
       const hall = new Hall(hallData);
       await hall.save();
+
+      // Notify admin via Telegram
+      await sendTelegramNotification(
+        `🏛 <b>New Hall Submitted!</b>\n\n` +
+        `📌 Hall: <b>${hall.name}</b>\n` +
+        `👤 Owner: ${req.user.name}\n` +
+        `📧 Email: ${req.user.email}\n` +
+        `📍 City: ${hall.location?.city}, ${hall.location?.state}\n` +
+        `💰 Price: ₹${hall.pricePerHour}/hr\n` +
+        `👥 Capacity: ${hall.capacity} guests\n\n` +
+        `⚡ Login to approve or reject it.\n` +
+        `🔗 ${process.env.FRONTEND_URL}/admin/dashboard`
+      );
 
       res.status(201).json(hall);
     } catch (error) {
