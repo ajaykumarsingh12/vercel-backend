@@ -266,16 +266,31 @@ router.post(
       await hall.save();
 
       // Notify admin via Telegram
+      const now = new Date().toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+      });
       await sendTelegramNotification(
-        `🏛 <b>New Hall Submitted!</b>\n\n` +
-        `📌 Hall: <b>${hall.name}</b>\n` +
-        `👤 Owner: ${req.user.name}\n` +
-        `📧 Email: ${req.user.email}\n` +
-        `📍 City: ${hall.location?.city}, ${hall.location?.state}\n` +
-        `💰 Price: ₹${hall.pricePerHour}/hr\n` +
-        `👥 Capacity: ${hall.capacity} guests\n\n` +
-        `⚡ Login to approve or reject it.\n` +
-        `🔗 ${process.env.FRONTEND_URL}/admin/dashboard`
+        `━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `🏛️<b>NEW HALL APPROVAL REQUEST</b>\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `🎪<b>Hall Information</b>\n` +
+        `▸ <b>Name :</b> ${hall.name}\n` +
+        `▸ <b>City :</b> ${hall.location?.city}, ${hall.location?.state}\n` +
+        `▸ <b>Price :</b> ₹${hall.pricePerHour?.toLocaleString('en-IN')} / hr\n` +
+        `▸ <b>Capacity :</b> ${hall.capacity} guests\n\n` +
+        `👤 <b>Owner Information</b>\n` +
+        `▸ <b>Name :</b> ${req.user.name}\n` +
+        `▸ <b>Email :</b> ${req.user.email}\n\n` +
+        `🕐 <b>Submitted :</b> ${now}\n\n` +
+        `──────────────────────────\n` +
+        `⚠️<b>ACTION REQUIRED</b>\n` +
+        `This hall is waiting for your approval.\n` +
+        `Please <b>Approve ✅</b> or <b>Reject ❌</b> it.\n` +
+        `──────────────────────────\n\n` +
+        `🔗<a href="${process.env.FRONTEND_URL}/admin/dashboard">👉 Open Admin Dashboard</a>\n\n` +
+        `<i>— BookMyHall Notification System</i>`
       );
 
       res.status(201).json(hall);
