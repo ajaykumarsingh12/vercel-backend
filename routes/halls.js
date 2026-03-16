@@ -272,7 +272,6 @@ router.post(
         hour: '2-digit', minute: '2-digit', hour12: true
       });
       await sendTelegramNotification(
-        `━━━━━━━━━━━━━━━━━━━━━━\n` +
         `🏛️<b>NEW HALL APPROVAL REQUEST</b>\n` +
         `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
         `🎪<b>Hall Information</b>\n` +
