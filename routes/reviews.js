@@ -13,6 +13,7 @@ router.get("/:hallId", async (req, res) => {
   try {
     const reviews = await Review.find({ hall: req.params.hallId })
       .populate("user", "name")
+      .populate("booking", "bookingDate")
       .sort({ createdAt: -1 });
 
     // Calculate average rating
