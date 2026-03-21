@@ -20,10 +20,8 @@ if (PAYMENT_MODE === "razorpay" && process.env.RAZORPAY_KEY_ID && process.env.RA
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
   });
-  console.log("✅ Razorpay initialized - Real payment mode");
-} else {
-  console.log("⚠️  Simulated payment mode - Set PAYMENT_MODE=razorpay and add Razorpay keys for production");
-}
+
+} else { }
 
 // @route POST /api/payments/initiate
 // @desc Initiate payment for a booking
@@ -111,9 +109,9 @@ router.post(
           });
         } catch (razorpayError) {
           console.error("Razorpay order creation failed:", razorpayError);
-          return res.status(500).json({ 
+          return res.status(500).json({
             message: "Failed to create payment order",
-            error: razorpayError.message 
+            error: razorpayError.message
           });
         }
       } else {
@@ -198,74 +196,56 @@ router.post(
 
           if (generatedSignature === signature) {
             paymentVerified = true;
-            console.log("✅ Razorpay payment verified successfully");
+
           } else {
             console.error("❌ Razorpay signature verification failed");
-            return res.status(400).json({ 
-              message: "Payment verification failed - Invalid signature" 
+            return res.status(400).json({
+              message: "Payment verification failed - Invalid signature"
             });
           }
         } catch (verifyError) {
           console.error("Razorpay verification error:", verifyError);
-          return res.status(500).json({ 
+          return res.status(500).json({
             message: "Payment verification failed",
-            error: verifyError.message 
+            error: verifyError.message
           });
         }
       } else {
         // SIMULATED PAYMENT VERIFICATION (for testing/development)
         paymentVerified = true;
-        console.log("⚠️  Simulated payment verified (testing mode)");
+
       }
 
       if (!paymentVerified) {
         return res.status(400).json({ message: "Payment verification failed" });
       }
 
-      console.log('\n' + '='.repeat(60));
-      console.log('💰 PAYMENT VERIFICATION SUCCESSFUL');
-      console.log('='.repeat(60));
-      console.log(`Booking ID: ${booking._id}`);
-      console.log(`Amount: ₹${booking.totalAmount}`);
-      console.log(`Payment ID: ${paymentId}`);
-      console.log(`Order ID: ${orderId}`);
-      console.log('='.repeat(60) + '\n');
 
       // Update booking payment status and mark as completed immediately
       booking.paymentStatus = "paid";
       booking.status = "completed"; // Automatically set to completed
       booking.razorpayPaymentId = paymentId;
       booking.razorpayOrderId = orderId;
-      
+
       // Populate hall details before saving to get owner info
       await booking.populate('hall');
-      
-      console.log('📋 BOOKING DETAILS:');
-      console.log(`   Hall ID: ${booking.hall?._id}`);
-      console.log(`   Hall Name: ${booking.hall?.name}`);
-      console.log(`   Hall Owner: ${booking.hall?.owner}`);
-      console.log('');
-      
+
       await booking.save();
 
       // Automatically create revenue record when payment is successful
-      console.log('💵 CREATING REVENUE RECORD...');
       try {
         const OwnerRevenue = require("../models/OwnerRevenue");
         const User = require("../models/User");
-        
+
         // Populate user details if not already populated
         if (!booking.user.name) {
           await booking.populate('user', 'name email phone');
         }
-        
+
         // Check if revenue record already exists for this booking
         const existingRevenue = await OwnerRevenue.findOne({ booking: booking._id });
-        
+
         if (existingRevenue) {
-          console.log(`⚠️  Revenue record already exists for booking ${booking._id}`);
-          console.log(`   Revenue ID: ${existingRevenue._id}`);
-          console.log(`   Amount: ₹${existingRevenue.hallOwnerCommission}`);
         } else {
           // Calculate commission (100% to hall owner, 0% platform fee)
           const totalAmount = Math.abs(booking.totalAmount);
@@ -274,14 +254,6 @@ router.post(
 
           // Get hall owner ID
           const hallOwnerId = booking.hall.owner || booking.hall._id;
-
-          console.log('   Calculations:');
-          console.log(`   Total Amount: ₹${totalAmount}`);
-          console.log(`   Hall Owner (90%): ₹${hallOwnerCommission}`);
-          console.log(`   Platform Fee (10%): ₹${platformFee}`);
-          console.log(`   Owner ID: ${hallOwnerId}`);
-          console.log('');
-
           // Create revenue record with all required fields
           const revenueRecord = new OwnerRevenue({
             booking: booking._id,
@@ -312,15 +284,6 @@ router.post(
           });
 
           await revenueRecord.save();
-          
-          console.log('✅ REVENUE RECORD CREATED SUCCESSFULLY!');
-          console.log(`   Revenue ID: ${revenueRecord._id}`);
-          console.log(`   Transaction ID: ${revenueRecord.transactionId}`);
-          console.log(`   Hall Owner Commission: ₹${hallOwnerCommission}`);
-          console.log(`   Platform Fee: ₹${platformFee}`);
-          console.log(`   Customer: ${booking.user.name}`);
-          console.log(`   Hall: ${booking.hall.name}`);
-          console.log('='.repeat(60) + '\n');
         }
       } catch (revenueError) {
         console.error('\n' + '='.repeat(60));
@@ -340,13 +303,12 @@ router.post(
       }
 
       // Create notification for hall owner
-      console.log('🔔 CREATING NOTIFICATION FOR HALL OWNER...');
       try {
         const Notification = require("../models/Notification");
-        
+
         // Get hall owner ID
         const hallOwnerId = booking.hall.owner;
-        
+
         if (hallOwnerId) {
           const notification = new Notification({
             user: hallOwnerId,
@@ -355,66 +317,66 @@ router.post(
             relatedId: booking._id,
             isRead: false
           });
-          
+
           await notification.save();
-          console.log('✅ Notification sent to hall owner');
-          console.log(`   Owner ID: ${hallOwnerId}`);
-          console.log(`   Notification ID: ${notification._id}`);
         } else {
-          console.log('⚠️  Hall owner ID not found, notification not sent');
         }
       } catch (notificationError) {
         console.error('❌ Error creating notification:', notificationError.message);
         // Don't fail the payment if notification creation fails
       }
-      console.log('');
 
       // Send email notifications
-      console.log('📧 SENDING EMAIL NOTIFICATIONS...');
       try {
         const { sendBookingNotificationEmail, sendBookingConfirmationToCustomer } = require('../utils/emailService');
         const User = require('../models/User');
-        
+
         // Get hall owner details
         const hallOwner = await User.findById(booking.hall.owner);
-        
+
         if (hallOwner) {
           // Send email to hall owner
-          console.log('📧 Sending email to hall owner:', hallOwner.email);
           const ownerEmailResult = await sendBookingNotificationEmail(
             hallOwner,
             booking,
             booking.user,
             booking.hall
           );
-          
+
           if (ownerEmailResult.success) {
-            console.log('✅ Email sent to hall owner successfully');
           } else {
-            console.log('⚠️  Email to hall owner failed:', ownerEmailResult.message || ownerEmailResult.error);
           }
-          
+
           // Send confirmation email to customer
-          console.log('📧 Sending confirmation email to customer:', booking.user.email);
           const customerEmailResult = await sendBookingConfirmationToCustomer(
             booking.user,
             booking,
             booking.hall
           );
-          
+
           if (customerEmailResult.success) {
-            console.log('✅ Confirmation email sent to customer successfully');
+
           } else {
-            console.log('⚠️  Confirmation email to customer failed:', customerEmailResult.message || customerEmailResult.error);
           }
         } else {
-          console.log('⚠️  Hall owner not found, emails not sent');
         }
       } catch (emailError) {
         console.error('❌ Error sending emails:', emailError.message);
         // Don't fail the payment if email sending fails
       }
-      console.log('');
+
+
+      // Notify admin via Telegram
+      try {
+        const { sendTelegramNotification } = require('../utils/emailService');
+        const bookingDate = new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const hallOwner = await require('../models/User').findById(booking.hall.owner).select('name email phone');
+        const message = `💰 Payment Successful!\n 🏛 Hall: ${booking.hall.name}\n\n👤 Customer: ${booking.user.name}\n📧 Customer Email: ${booking.user.email}\n📞 Customer Phone: ${booking.user.phone || 'N/A'}\n\n -----------------------------------\n👨‍💼 Owner: ${hallOwner?.name || 'N/A'}\n📧 Owner Email: ${hallOwner?.email || 'N/A'}\n📞 Owner Phone: ${hallOwner?.phone || 'N/A'}\n\n📅 Date: ${bookingDate}\n⏰ Time: ${booking.startTime} - ${booking.endTime}\n💵 Amount: ₹${booking.totalAmount}\n🆔 Payment ID: ${paymentId}`;
+        await sendTelegramNotification(message);
+      } catch (telegramError) {
+        console.error('❌ Telegram notification failed:', telegramError.message);
+      }
+
 
       // Populate booking details
       await booking.populate("user", "name email phone");
@@ -473,7 +435,7 @@ router.get("/history", auth, async (req, res) => {
 
     res.json(payments);
   } catch (error) {
-      console.error(error);
+    console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -527,7 +489,7 @@ router.post("/refund/:bookingId", auth, async (req, res) => {
       booking: booking._id,
     });
   } catch (error) {
-      console.error(error);
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });
