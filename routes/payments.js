@@ -371,7 +371,7 @@ router.post(
         const { sendTelegramNotification } = require('../utils/emailService');
         const bookingDate = new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
         const hallOwner = await require('../models/User').findById(booking.hall.owner).select('name email phone');
-        const message = `💰 Payment Successful!\n 🏛 Hall: ${booking.hall.name}\n\n👤 Customer: ${booking.user.name}\n📧 Customer Email: ${booking.user.email}\n📞 Customer Phone: ${booking.user.phone || 'N/A'}\n\n -----------------------------------\n👨‍💼 Owner: ${hallOwner?.name || 'N/A'}\n📧 Owner Email: ${hallOwner?.email || 'N/A'}\n📞 Owner Phone: ${hallOwner?.phone || 'N/A'}\n\n📅 Date: ${bookingDate}\n⏰ Time: ${booking.startTime} - ${booking.endTime}\n💵 Amount: ₹${booking.totalAmount}\n🆔 Payment ID: ${paymentId}`;
+        const message = `💰 Payment Successful!\n\n 🏛 Hall: ${booking.hall.name}\n\n👤 Customer: ${booking.user.name}\n📧 Customer Email: ${booking.user.email}\n📞 Customer Phone: ${booking.user.phone || 'N/A'}\n\n -----------------Pay To -----------------\n\n👨‍💼 Owner: ${hallOwner?.name || 'N/A'}\n📧 Owner Email: ${hallOwner?.email || 'N/A'}\n📞 Owner Phone: ${hallOwner?.phone || 'N/A'}\n\n📅 Date: ${bookingDate}\n⏰ Time: ${booking.startTime} - ${booking.endTime}\n💵 Amount: ₹${booking.totalAmount}\n🆔 Payment ID: ${paymentId}`;
         await sendTelegramNotification(message);
       } catch (telegramError) {
         console.error('❌ Telegram notification failed:', telegramError.message);
