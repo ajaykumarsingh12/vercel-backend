@@ -397,4 +397,37 @@ router.put("/unblock-requests/:id/deny", async (req, res) => {
   }
 });
 
+// @route GET /api/admin/halls/:id/reviews
+// @desc Get all reviews for a hall
+// @access Private (Admin)
+router.get("/halls/:id/reviews", async (req, res) => {
+  try {
+    const Review = require("../models/Review");
+    const reviews = await Review.find({ hall: req.params.id })
+      .populate("user", "name email")
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(reviews);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// @route DELETE /api/admin/reviews/:id
+// @desc Delete a review (admin)
+// @access Private (Admin)
+router.delete("/reviews/:id", async (req, res) => {
+  try {
+    const Review = require("../models/Review");
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: "Review not found" });
+    await review.deleteOne();
+    res.json({ message: "Review deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
