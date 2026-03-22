@@ -304,7 +304,16 @@ router.get("/unblock-requests", async (req, res) => {
       .populate("relatedId", "name email role isBlocked")
       .sort({ createdAt: -1 });
 
-    res.json(requests);
+    // Deduplicate by relatedId — old duplicate DB records won't show twice
+    const seen = new Set();
+    const unique = requests.filter(r => {
+      const key = r.relatedId?._id?.toString() || r._id.toString();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    res.json(unique);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

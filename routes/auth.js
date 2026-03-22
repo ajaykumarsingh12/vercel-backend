@@ -354,33 +354,44 @@ router.post("/request-unblock", async (req, res) => {
       return res.status(400).json({ message: "Account is not blocked" });
     }
 
-    // Find all admin users
-    const admins = await User.find({ role: "admin" });
+    const Notification = require("../models/Notification");
 
-    if (admins.length === 0) {
+    // Prevent duplicate: if a pending request already exists, don't create another
+    const existingRequest = await Notification.findOne({
+      type: "unblock_request",
+      relatedId: user._id,
+      "requestData.status": "pending"
+    });
+
+    if (existingRequest) {
+      return res.json({
+        message: "Your unblock request is already pending. Admin will review it shortly.",
+        success: true
+      });
+    }
+
+    // Find first admin user
+    const admin = await User.findOne({ role: "admin" });
+
+    if (!admin) {
       return res.status(500).json({ message: "No admin found to process request" });
     }
 
-    // Create notification for each admin
-    const Notification = require("../models/Notification");
-    
-    const notificationPromises = admins.map(admin => 
-      Notification.create({
-        user: admin._id,
-        type: "unblock_request",
-        message: `${user.name} (${user.role === 'hall_owner' ? 'Hall Owner' : 'User'}) has requested to unblock their account`,
-        relatedId: user._id,
-        requestData: {
-          userEmail: email,
-          userName: user.name,
-          userRole: user.role,
-          requestedAt: new Date(),
-          status: "pending"
-        }
-      })
-    );
+    // Create a single notification
+    await Notification.create({
+      user: admin._id,
+      type: "unblock_request",
+      message: `${user.name} (${user.role === 'hall_owner' ? 'Hall Owner' : 'User'}) has requested to unblock their account`,
+      relatedId: user._id,
+      requestData: {
+        userEmail: email,
+        userName: user.name,
+        userRole: user.role,
+        requestedAt: new Date(),
+        status: "pending"
+      }
+    });
 
-    await Promise.all(notificationPromises);
     res.json({ 
       message: "Unblock request sent successfully. Admin will review your request.",
       success: true 
