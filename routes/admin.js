@@ -222,20 +222,20 @@ router.put("/users/:id/block", async (req, res) => {
 // @access Private (Admin)
 router.get("/halls", async (req, res) => {
   try {
-    const { isApproved } = req.query;
+    const { isApproved, status } = req.query;
     let filter = {};
-    
-    if (isApproved !== undefined) {
-      if (isApproved === "true") {
-        filter.isApproved = "approved";
-      } else if (isApproved === "false") {
-        filter.isApproved = "pending";
-      }
+
+    // Support new ?status=pending|approved|rejected param
+    if (status && ["pending", "approved", "rejected"].includes(status)) {
+      filter.isApproved = status;
+    } else if (isApproved !== undefined) {
+      // Legacy support
+      if (isApproved === "true") filter.isApproved = "approved";
+      else if (isApproved === "false") filter.isApproved = "pending";
     }
 
-    // ✅ OPTIMIZED: Use lean() for read-only queries
     const halls = await Hall.find(filter)
-      .populate("owner", "name email")
+      .populate("owner", "name email phone")
       .sort({ createdAt: -1 })
       .lean();
 
