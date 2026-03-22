@@ -463,6 +463,7 @@ router.post("/google", async (req, res) => {
         return res.status(403).json({
           message: "Your account has been blocked. Please contact support for assistance.",
           isBlocked: true,
+          email: user.email,
         });
       }
 
@@ -562,6 +563,7 @@ router.post("/apple", async (req, res) => {
         return res.status(403).json({
           message: "Your account has been blocked. Please contact support for assistance.",
           isBlocked: true,
+          email: user.email,
         });
       }
 
@@ -671,6 +673,7 @@ router.post("/facebook", async (req, res) => {
         return res.status(403).json({
           message: "Your account has been blocked. Please contact support for assistance.",
           isBlocked: true,
+          email: user.email,
         });
       }
 
@@ -730,4 +733,7 @@ router.post("/facebook", async (req, res) => {
     });
   }
 });
+
+
+
 

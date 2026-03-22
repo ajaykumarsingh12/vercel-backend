@@ -151,6 +151,7 @@ if (process.env.VERCEL !== '1' && require.main === module) {
   connectDB().then(() => {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
+      console.log("Database Connected Successfully...")
     });
   }).catch(error => {
     console.error('Failed to start server:', error);
