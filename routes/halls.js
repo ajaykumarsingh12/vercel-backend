@@ -43,14 +43,6 @@ router.get("/", async (req, res) => {
 
     // DEBUG: Log all halls in database
     const allHalls = await Hall.find();
-    console.log('Total halls in database:', allHalls.length);
-    console.log('Halls by status:', {
-      approved: allHalls.filter(h => h.isApproved === 'approved').length,
-      pending: allHalls.filter(h => h.isApproved === 'pending').length,
-      rejected: allHalls.filter(h => h.isApproved === 'rejected').length,
-      undefined: allHalls.filter(h => !h.isApproved).length,
-    });
-
     // Build filter - ONLY show approved halls on public pages
     const filter = {
       isApproved: "approved"
@@ -66,9 +58,6 @@ router.get("/", async (req, res) => {
       if (minPrice) filter.pricePerHour.$gte = Number(minPrice);
       if (maxPrice) filter.pricePerHour.$lte = Number(maxPrice);
     }
-
-    console.log('Filter being applied:', JSON.stringify(filter, null, 2));
-
     let query = Hall.find(filter).sort({ createdAt: -1 });
 
     // Add limit if specified
@@ -77,10 +66,6 @@ router.get("/", async (req, res) => {
     }
 
     const halls = await query;
-    
-    console.log(' Halls returned:', halls.length);
-    console.log('Halls approval status:', halls.map(h => ({ name: h.name, isApproved: h.isApproved })));
-
     res.json(halls);
   } catch (error) {
     console.error('Error in GET /api/halls:', error);
@@ -97,12 +82,6 @@ router.get(
   authorize("hall_owner", "admin"),
   async (req, res) => {
     try {
-      console.log('🔍 [MY-HALLS] Request from user:', {
-        userId: req.user._id.toString(),
-        userEmail: req.user.email,
-        userRole: req.user.role
-      });
-
       // Convert to ObjectId for strict comparison
       const ownerId = new mongoose.Types.ObjectId(req.user._id);
       
@@ -113,13 +92,6 @@ router.get(
         .populate("owner", "name email _id")
         .sort({ createdAt: -1 })
         .lean(); // Use lean() for faster read-only queries
-
-      console.log('✅ [MY-HALLS] Found halls:', {
-        count: userHalls.length,
-        hallIds: userHalls.map(h => h._id.toString()),
-        hallNames: userHalls.map(h => h.name)
-      });
-
       // Double-check: Filter again on backend to ensure no leakage
       const filteredHalls = userHalls.filter(hall => {
         const hallOwnerId = hall.owner?._id?.toString() || hall.owner?.toString();
@@ -179,8 +151,6 @@ router.get("/all-my-halls", auth, async (req, res) => {
   try {
     // SECURITY FIX: This endpoint was returning ALL halls to everyone
     // Now it returns only the current user's halls (same as /my-halls)
-    console.log('⚠️ [ALL-MY-HALLS] Deprecated endpoint called, redirecting to my-halls logic');
-    
     const ownerId = new mongoose.Types.ObjectId(req.user._id);
     const userHalls = await Hall.find({ owner: ownerId })
       .populate("owner", "name email _id")

@@ -381,9 +381,6 @@ router.post("/request-unblock", async (req, res) => {
     );
 
     await Promise.all(notificationPromises);
-
-    console.log(`Unblock request created for: ${email} (${user.name}) - Role: ${user.role}`);
-
     res.json({ 
       message: "Unblock request sent successfully. Admin will review your request.",
       success: true 
@@ -418,15 +415,11 @@ router.post("/google", async (req, res) => {
         const onlineUser = await OnlineUser.findOne({ sessionId });
         if (onlineUser) {
           selectedRole = onlineUser.selectedRole;
-          console.log('🔵 Retrieved role from session:', selectedRole);
         }
       } catch (error) {
         console.error('Failed to retrieve session:', error);
       }
     }
-
-    console.log('🔵 Final selected role:', selectedRole);
-
     // Verify Google token
     const fetch = require("node-fetch");
     const response = await fetch(
@@ -454,8 +447,6 @@ router.post("/google", async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      console.log('🔵 Existing user found:', email, 'Current role:', user.role, 'Requested role:', selectedRole);
-      
       // Check if user is blocked
       if (user.isBlocked) {
         return res.status(403).json({
@@ -467,7 +458,6 @@ router.post("/google", async (req, res) => {
       // Update role if explicitly provided and different from current role
       // Only allow switching between user and hall_owner (not admin)
       if (selectedRole && (selectedRole === "user" || selectedRole === "hall_owner") && user.role !== selectedRole && user.role !== "admin") {
-        console.log('🔵 Updating role from', user.role, 'to', selectedRole);
         user.role = selectedRole;
       }
 
@@ -477,12 +467,9 @@ router.post("/google", async (req, res) => {
       }
 
       await user.save();
-      console.log('🔵 User saved with role:', user.role);
     } else {
       // Validate role (only user or hall_owner allowed)
       const userRole = selectedRole === "hall_owner" ? "hall_owner" : "user";
-      console.log('🔵 Creating new user with role:', userRole);
-
       // Create new user with Google data
       user = new User({
         name: name || email.split("@")[0],
@@ -494,7 +481,6 @@ router.post("/google", async (req, res) => {
       });
 
       await user.save();
-      console.log('🔵 New user created with role:', user.role);
     }
 
     const token = generateToken(user._id);
@@ -624,11 +610,9 @@ router.post("/apple", async (req, res) => {
 // @access Public
 router.post("/facebook", async (req, res) => {
   try {
-    console.log('🔵 Backend received request body:', req.body);
     const { accessToken, role, sessionId } = req.body;
 
     if (!accessToken) {
-      console.log('🔴 Missing accessToken');
       return res.status(400).json({
         success: false,
         message: "Facebook access token is required",
@@ -643,26 +627,18 @@ router.post("/facebook", async (req, res) => {
         const onlineUser = await OnlineUser.findOne({ sessionId });
         if (onlineUser) {
           selectedRole = onlineUser.selectedRole;
-          console.log('🔵 Retrieved role from session:', selectedRole);
         }
       } catch (error) {
         console.error('Failed to retrieve session:', error);
       }
     }
-
-    console.log('🔵 Final selected role:', selectedRole);
-
     // Verify Facebook token and get user data
     const fetch = require("node-fetch");
-    console.log('🔵 Verifying Facebook token...');
     const response = await fetch(
       `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`
     );
     const facebookUser = await response.json();
-    console.log('🔵 Facebook API response:', facebookUser);
-
     if (facebookUser.error) {
-      console.log('🔴 Facebook API error:', facebookUser.error);
       return res.status(401).json({
         success: false,
         message: "Invalid Facebook token",
@@ -670,24 +646,15 @@ router.post("/facebook", async (req, res) => {
     }
 
     const { email, name, picture, id } = facebookUser;
-    console.log('🔵 Extracted data - Email:', email, 'Name:', name, 'Picture:', picture, 'Facebook ID:', id);
-    console.log('🔵 Full Facebook user object:', JSON.stringify(facebookUser));
-
     // If email is not provided, use Facebook ID as email
     let userEmail = email;
     if (!email) {
-      console.log('🟡 Email not provided by Facebook, using Facebook ID as identifier');
       userEmail = `facebook_${id}@facebook-user.com`;
     }
-    
-    console.log('🔵 Using email:', userEmail, 'proceeding with user lookup...');
-
     // Check if user exists
     let user = await User.findOne({ email: userEmail });
 
     if (user) {
-      console.log('🔵 Existing user found:', userEmail, 'Current role:', user.role, 'Requested role:', selectedRole);
-
       // Check if user is blocked
       if (user.isBlocked) {
         return res.status(403).json({
@@ -699,7 +666,6 @@ router.post("/facebook", async (req, res) => {
       // Update role if explicitly provided and different from current role
       // Only allow switching between user and hall_owner (not admin)
       if (selectedRole && (selectedRole === "user" || selectedRole === "hall_owner") && user.role !== selectedRole && user.role !== "admin") {
-        console.log('🔵 Updating role from', user.role, 'to', selectedRole);
         user.role = selectedRole;
       }
 
@@ -709,12 +675,9 @@ router.post("/facebook", async (req, res) => {
       }
 
       await user.save();
-      console.log('🔵 User saved with role:', user.role);
     } else {
       // Validate role (only user or hall_owner allowed)
       const userRole = selectedRole === "hall_owner" ? "hall_owner" : "user";
-      console.log('🔵 Creating new user with role:', userRole);
-
       // Create new user with Facebook data
       user = new User({
         name: name || userEmail.split("@")[0],
@@ -726,7 +689,6 @@ router.post("/facebook", async (req, res) => {
       });
 
       await user.save();
-      console.log('🔵 New user created with role:', user.role);
     }
 
     const token = generateToken(user._id);

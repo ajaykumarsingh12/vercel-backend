@@ -132,10 +132,6 @@ ownerRevenueSchema.statics.getTotalRevenue = async function(hallOwnerId, startDa
       }
     }
   ]);
-
-  console.log('getTotalRevenue - Match:', match);
-  console.log('getTotalRevenue - Result:', result[0]);
-
   return result[0] || { totalRevenue: 0, totalBookings: 0, totalPlatformFees: 0 };
 };
 

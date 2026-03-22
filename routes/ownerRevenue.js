@@ -113,9 +113,6 @@ router.get("/latest", auth, async (req, res) => {
     if (req.user.role === "hall_owner") {
       filter.hallOwner = req.user._id;
     }
-
-    console.log('🔍 /latest - Filter:', filter);
-    
     // Get ALL revenue records
     const allRevenues = await OwnerRevenue.find(filter)
       .select('hallOwner hall hallName customer customerPhone booking date startTime endTime totalAmount hallOwnerCommission platformFee status')
@@ -124,11 +121,6 @@ router.get("/latest", auth, async (req, res) => {
       .exec();
 
     const total = allRevenues.reduce((sum, r) => sum + (r.hallOwnerCommission || 0), 0);
-    
-    console.log('✅ Found:', allRevenues.length, 'records');
-    console.log('💰 Total:', total);
-    console.log('📦 Response size:', JSON.stringify(allRevenues).length, 'bytes');
-
     const response = {
       success: true,
       message: "All revenue records",
@@ -136,9 +128,6 @@ router.get("/latest", auth, async (req, res) => {
       total: total,
       revenues: allRevenues
     };
-
-    console.log('📤 Sending response with', response.revenues.length, 'revenues');
-    
     res.status(200).json(response);
   } catch (error) {
     console.error('❌ Error:', error);
@@ -161,10 +150,6 @@ router.get("/all-records", auth, async (req, res) => {
     const records = await OwnerRevenue.find({ hallOwner: hallOwnerId }).lean();
     
     const total = records.reduce((sum, r) => sum + (r.hallOwnerCommission || 0), 0);
-    
-    console.log(`📊 ALL RECORDS for owner ${hallOwnerId}:`, records.length);
-    console.log(`💰 TOTAL: ₹${total}`);
-    
     res.json({
       count: records.length,
       total: total,

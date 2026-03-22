@@ -24,7 +24,6 @@ const sendBookingNotificationEmail = async (hallOwner, booking, user, hall) => {
     
     // Skip if email not configured
     if (!transporter) {
-      console.log('📧 Email service not configured - skipping email notification');
       return { success: false, message: 'Email service not configured' };
     }
 
@@ -221,10 +220,6 @@ BookMyHall Team
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
-    console.log('✅ Email sent successfully to:', hallOwner.email);
-    console.log('   Message ID:', info.messageId);
-    
     return { success: true, messageId: info.messageId };
     
   } catch (error) {
@@ -239,7 +234,6 @@ const sendBookingConfirmationToCustomer = async (user, booking, hall) => {
     const transporter = createTransporter();
     
     if (!transporter) {
-      console.log('📧 Email service not configured - skipping email notification');
       return { success: false, message: 'Email service not configured' };
     }
 
@@ -407,9 +401,6 @@ Thank you for choosing BookMyHall!
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
-    console.log('✅ Confirmation email sent to customer:', user.email);
-    
     return { success: true, messageId: info.messageId };
     
   } catch (error) {
@@ -422,7 +413,6 @@ Thank you for choosing BookMyHall!
 const sendTelegramNotification = async (message) => {
   try {
     if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
-      console.log('📱 Telegram not configured - skipping');
       return { success: false };
     }
 
@@ -435,8 +425,6 @@ const sendTelegramNotification = async (message) => {
         parse_mode: 'HTML',
       }
     );
-
-    console.log('✅ Telegram notification sent to admin');
     return { success: true };
   } catch (error) {
     console.error('❌ Telegram error:', error.message);
