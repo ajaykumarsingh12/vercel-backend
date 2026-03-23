@@ -261,7 +261,7 @@ router.post(
 // @access Private (Hall Owner or Admin)
 router.put(
   "/:id",
-  [auth, upload.array("images", 15), parseFormData],
+  [auth],
   async (req, res) => {
     try {
       const hall = await Hall.findById(req.params.id).populate("owner", "_id");
@@ -285,21 +285,26 @@ router.put(
       }
 
       // Handle image updates
-      let updatedImages = hall.images; // Start with existing images
+      let updatedImages = hall.images;
 
-      // If existingImages array is provided, use it as the base
+      // Use existingImages as base if provided
       if (req.body.existingImages) {
-        if (Array.isArray(req.body.existingImages)) {
-          updatedImages = req.body.existingImages;
-        } else {
-          updatedImages = [req.body.existingImages];
-        }
+        updatedImages = Array.isArray(req.body.existingImages)
+          ? req.body.existingImages
+          : [req.body.existingImages];
       }
 
-      // Add new uploaded images
+      // Append new Cloudinary URLs uploaded directly from frontend
+      if (req.body.newImages) {
+        const newImgs = Array.isArray(req.body.newImages)
+          ? req.body.newImages
+          : [req.body.newImages];
+        updatedImages = [...updatedImages, ...newImgs];
+      }
+
+      // Legacy: also handle multer file uploads if present
       if (req.files && req.files.length > 0) {
-        const newImagePaths = req.files.map((file) => file.path); // Cloudinary returns full URL
-        updatedImages = [...updatedImages, ...newImagePaths];
+        updatedImages = [...updatedImages, ...req.files.map((f) => f.path)];
       }
 
       // Update hall data
