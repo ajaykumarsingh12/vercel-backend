@@ -85,7 +85,7 @@ router.get(
       // Convert to ObjectId for strict comparison
       const ownerId = new mongoose.Types.ObjectId(req.user._id);
       
-      // ✅ STRICT FILTER: Only fetch halls where owner exactly matches current user
+      //  STRICT FILTER: Only fetch halls where owner exactly matches current user
       const userHalls = await Hall.find({ 
         owner: ownerId 
       })
@@ -100,7 +100,7 @@ router.get(
       });
 
       if (filteredHalls.length !== userHalls.length) {
-        console.warn('⚠️ [MY-HALLS] Security filter removed unauthorized halls:', {
+        console.warn('[MY-HALLS] Security filter removed unauthorized halls:', {
           before: userHalls.length,
           after: filteredHalls.length
         });
@@ -108,7 +108,7 @@ router.get(
 
       res.json(filteredHalls);
     } catch (error) {
-      console.error('❌ [MY-HALLS] Error:', error);
+      console.error('[MY-HALLS] Error:', error);
       res.status(500).json({ message: "Server error", error: error.message });
     }
   }
@@ -377,7 +377,7 @@ router.get("/:id/analytics", auth, async (req, res) => {
     const start = startDate ? new Date(startDate) : new Date(new Date().setMonth(new Date().getMonth() - 6));
     const end = endDate ? new Date(endDate) : new Date();
 
-    // ✅ AGGREGATION PIPELINE for analytics
+    // AGGREGATION PIPELINE for analytics
     const analytics = await Booking.aggregate([
       // Stage 1: Filter by hall and date range
       {

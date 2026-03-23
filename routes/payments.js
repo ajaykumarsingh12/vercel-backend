@@ -198,7 +198,7 @@ router.post(
             paymentVerified = true;
 
           } else {
-            console.error("❌ Razorpay signature verification failed");
+            console.error("Razorpay signature verification failed");
             return res.status(400).json({
               message: "Payment verification failed - Invalid signature"
             });
@@ -250,7 +250,7 @@ router.post(
           // Calculate commission (100% to hall owner, 0% platform fee)
           const totalAmount = Math.abs(booking.totalAmount);
           const hallOwnerCommission = totalAmount; // 100% to hall owner
-          const platformFee = 0; // 0% platform fee
+          const platformFee = 0; 
 
           // Get hall owner ID
           const hallOwnerId = booking.hall.owner || booking.hall._id;
@@ -287,7 +287,7 @@ router.post(
         }
       } catch (revenueError) {
         console.error('\n' + '='.repeat(60));
-        console.error('❌ ERROR CREATING REVENUE RECORD');
+        console.error('ERROR CREATING REVENUE RECORD');
         console.error('='.repeat(60));
         console.error('Error:', revenueError.message);
         console.error('Stack:', revenueError.stack);
@@ -322,7 +322,7 @@ router.post(
         } else {
         }
       } catch (notificationError) {
-        console.error('❌ Error creating notification:', notificationError.message);
+        console.error('Error creating notification:', notificationError.message);
         // Don't fail the payment if notification creation fails
       }
 
@@ -361,7 +361,7 @@ router.post(
         } else {
         }
       } catch (emailError) {
-        console.error('❌ Error sending emails:', emailError.message);
+        console.error('Error sending emails:', emailError.message);
         // Don't fail the payment if email sending fails
       }
 
@@ -374,7 +374,7 @@ router.post(
         const message = `💰 Payment Successful!\n\n 🏛 Hall: ${booking.hall.name}\n\n👤 Customer: ${booking.user.name}\n📧 Customer Email: ${booking.user.email}\n📞 Customer Phone: ${booking.user.phone || 'N/A'}\n\n -----------------Pay To -----------------\n\n👨‍💼 Owner: ${hallOwner?.name || 'N/A'}\n📧 Owner Email: ${hallOwner?.email || 'N/A'}\n📞 Owner Phone: ${hallOwner?.phone || 'N/A'}\n\n📅 Date: ${bookingDate}\n⏰ Time: ${booking.startTime} - ${booking.endTime}\n💵 Amount: ₹${booking.totalAmount}\n🆔 Payment ID: ${paymentId}`;
         await sendTelegramNotification(message);
       } catch (telegramError) {
-        console.error('❌ Telegram notification failed:', telegramError.message);
+        console.error('Telegram notification failed:', telegramError.message);
       }
 
 

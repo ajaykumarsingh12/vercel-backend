@@ -70,8 +70,6 @@ router.get("/reverse", async (req, res) => {
         message: "Latitude and longitude are required",
       });
     }
-
-    // Validate coordinates
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lon);
 

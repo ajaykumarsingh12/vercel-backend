@@ -155,7 +155,7 @@ ownerRevenueSchema.statics.getRevenueByHall = async function(hallOwnerId, startD
       $group: {
         _id: "$hall",
         hallName: { $first: "$hallName" },
-        totalRevenue: { $sum: "$hallOwnerCommission" }, // Use hallOwnerCommission (actual earnings)
+        totalRevenue: { $sum: "$hallOwnerCommission" }, 
         totalBookings: { $sum: 1 }
       }
     },
@@ -185,7 +185,7 @@ ownerRevenueSchema.statics.getMonthlyStats = async function(hallOwnerId, year) {
           year: { $year: "$date" },
           month: { $month: "$date" }
         },
-        totalRevenue: { $sum: "$hallOwnerCommission" }, // Use hallOwnerCommission (actual earnings)
+        totalRevenue: { $sum: "$hallOwnerCommission" }, 
         totalBookings: { $sum: 1 }
       }
     },

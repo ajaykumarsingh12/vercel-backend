@@ -25,9 +25,9 @@ const auth = async (req, res, next) => {
 
     // Check if user is blocked
     if (user.isBlocked) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Your account has been blocked. Please contact support for assistance.",
-        isBlocked: true 
+        isBlocked: true
       });
     }
 

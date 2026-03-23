@@ -33,7 +33,7 @@ router.get("/", auth, async (req, res) => {
       filter.hall = hall;
     }
 
-    // ✅ OPTIMIZED: Use lean() for read-only queries
+    //  OPTIMIZED: Use lean() for read-only queries
     const revenues = await OwnerRevenue.find(filter)
       .populate("hall", "name location")
       .populate("customer", "name email")
@@ -130,7 +130,7 @@ router.get("/latest", auth, async (req, res) => {
     };
     res.status(200).json(response);
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error(' Error:', error);
     res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 });
@@ -394,7 +394,7 @@ router.post("/", auth, async (req, res) => {
       endTime,
       totalAmount,
       hallOwnerCommission: hallOwnerCommission || totalAmount, // 100% to hall owner
-      platformFee: platformFee || 0, // 0% platform fee
+      platformFee: platformFee || 0,
       notes
     });
 

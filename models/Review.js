@@ -31,7 +31,7 @@ const reviewSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false, // True if user actually booked and used the hall
+      default: false, 
     },
   },
   {

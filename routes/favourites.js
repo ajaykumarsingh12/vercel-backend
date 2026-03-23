@@ -3,9 +3,9 @@ const router = express.Router();
 const Favourite = require("../models/Favourite");
 const { auth } = require("../middleware/auth");
 
-// @route   GET /api/favourites
-// @desc    Get user's favorites
-// @access  Private (Users only)
+// @route GET /api/favourites
+// @desc Get user's favorites
+// @access Private (Users only)
 router.get("/", auth, async (req, res) => {
   try {
     // Check if user has "user" role
@@ -68,9 +68,9 @@ router.post("/toggle/:hallId", auth, async (req, res) => {
   }
 });
 
-// @route   GET /api/favourites/check/:hallId
-// @desc    Check if hall is favorited by user
-// @access  Private (Users only)
+// @route GET /api/favourites/check/:hallId
+// @desc Check if hall is favorited by user
+// @access Private (Users only)
 router.get("/check/:hallId", auth, async (req, res) => {
   try {
     // Check if user has "user" role
@@ -88,9 +88,9 @@ router.get("/check/:hallId", auth, async (req, res) => {
   }
 });
 
-// @route   PUT /api/favourites/:id/note
-// @desc    Add/update note for a favorite
-// @access  Private (Users only)
+// @route PUT /api/favourites/:id/note
+// @desc Add/update note for a favorite
+// @access Private (Users only)
 router.put("/:id/note", auth, async (req, res) => {
   try {
     // Check if user has "user" role
@@ -125,9 +125,9 @@ router.put("/:id/note", auth, async (req, res) => {
   }
 });
 
-// @route   PUT /api/favourites/:id/tags
-// @desc    Add tags to a favorite
-// @access  Private (Users only)
+// @route PUT /api/favourites/:id/tags
+// @desc Add tags to a favorite
+// @access Private (Users only)
 router.put("/:id/tags", auth, async (req, res) => {
   try {
     // Check if user has "user" role
@@ -166,9 +166,9 @@ router.put("/:id/tags", auth, async (req, res) => {
   }
 });
 
-// @route   PUT /api/favourites/:id/priority
-// @desc    Set priority for a favorite
-// @access  Private (Users only)
+// @route PUT /api/favourites/:id/priority
+// @desc Set priority for a favorite
+// @access Private (Users only)
 router.put("/:id/priority", auth, async (req, res) => {
   try {
     // Check if user has "user" role
@@ -207,9 +207,9 @@ router.put("/:id/priority", auth, async (req, res) => {
   }
 });
 
-// @route   DELETE /api/favourites/:id
-// @desc    Permanently delete a favorite
-// @access  Private (Users only)
+// @route DELETE /api/favourites/:id
+// @desc Permanently delete a favorite
+// @access Private (Users only)
 router.delete("/:id", auth, async (req, res) => {
   try {
     // Check if user has "user" role
@@ -238,9 +238,9 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-// @route   GET /api/favourites/hall/:hallId/count
-// @desc    Get favorite count for a hall
-// @access  Public
+// @route GET /api/favourites/hall/:hallId/count
+// @desc Get favorite count for a hall
+// @access Public
 router.get("/hall/:hallId/count", async (req, res) => {
   try {
     const { hallId } = req.params;

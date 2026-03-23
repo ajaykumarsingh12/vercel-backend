@@ -44,7 +44,7 @@ router.post(
 
       const { name, email, password, role, phone } = req.body;
 
-      // 🔒 SECURITY: Block admin registration attempts
+      // SECURITY: Block admin registration attempts
       if (role === "admin") {
         return res.status(403).json({
           success: false,
@@ -59,7 +59,7 @@ router.post(
           .json({ success: false, message: "Email already registered" });
       }
 
-      // 🔒 SECURITY: Force role to be either "user" or "hall_owner", never "admin"
+      // SECURITY: Force role to be either "user" or "hall_owner", never "admin"
       const userRole = role === "hall_owner" ? "hall_owner" : "user";
 
       const user = new User({

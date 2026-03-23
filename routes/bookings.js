@@ -40,7 +40,7 @@ router.get("/", auth, async (req, res) => {
 
     res.json(bookings);
   } catch (error) {
-      console.error(error);
+    console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -113,7 +113,7 @@ router.get("/:id", auth, async (req, res) => {
 
     res.json(booking);
   } catch (error) {
-      console.error(error);
+    console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -301,17 +301,7 @@ router.put(
         try {
           // Check if revenue record already exists
           const existingRevenue = await OwnerRevenue.findOne({ booking: booking._id });
-
           if (!existingRevenue) {
-            
-            
-            
-            
-            
-            
-            
-            
-
             const revenueData = {
               hallOwner: booking.hall.owner._id,
               hall: booking.hall._id,
@@ -326,8 +316,8 @@ router.put(
               endTime: booking.endTime,
               duration: booking.totalHours,
               totalAmount: booking.totalAmount,
-              hallOwnerCommission: booking.totalAmount, // 100% to hall owner
-              platformFee: 0, // 0% platform fee
+              hallOwnerCommission: booking.totalAmount,
+              platformFee: 0,
               status: "completed",
               completedAt: new Date(),
               specialRequests: booking.specialRequests,
@@ -344,14 +334,12 @@ router.put(
             const ownerRevenue = new OwnerRevenue(revenueData);
             await ownerRevenue.save();
 
-            
+
           } else {
-            
+
           }
         } catch (revenueError) {
-      console.error(revenueError);
-          // Don't fail the booking completion if revenue record creation fails
-          // The booking status update should still succeed
+          console.error(revenueError);
         }
       }
 
@@ -430,7 +418,7 @@ router.delete("/:id", auth, async (req, res) => {
 
     res.json({ message: "Booking cancelled successfully" });
   } catch (error) {
-      console.error(error);
+    console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });

@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 const createTransporter = () => {
   // Check if email credentials are configured
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('⚠️  Email credentials not configured. Email notifications will be skipped.');
+    console.warn('Email credentials not configured. Email notifications will be skipped.');
     return null;
   }
 
@@ -223,7 +223,7 @@ BookMyHall Team
     return { success: true, messageId: info.messageId };
     
   } catch (error) {
-    console.error('❌ Error sending email:', error.message);
+    console.error('Error sending email:', error.message);
     return { success: false, error: error.message };
   }
 };
@@ -404,7 +404,7 @@ Thank you for choosing BookMyHall!
     return { success: true, messageId: info.messageId };
     
   } catch (error) {
-    console.error('❌ Error sending customer email:', error.message);
+    console.error('Error sending customer email:', error.message);
     return { success: false, error: error.message };
   }
 };
@@ -427,7 +427,7 @@ const sendTelegramNotification = async (message) => {
     );
     return { success: true };
   } catch (error) {
-    console.error('❌ Telegram error:', error.message);
+    console.error('Telegram error:', error.message);
     return { success: false, error: error.message };
   }
 };

@@ -16,7 +16,7 @@ router.use(authorize("admin"));
 // @access  Private (Admin)
 router.get("/stats", async (req, res) => {
   try {
-    // ✅ OPTIMIZED: Use aggregation pipelines and run in parallel
+    // OPTIMIZED: Use aggregation pipelines and run in parallel
     const [userStats, hallStats, bookingStats, revenueStats] = await Promise.all([
       // User statistics with aggregation
       User.aggregate([
@@ -126,7 +126,7 @@ router.get("/users", async (req, res) => {
     const { role } = req.query;
     const filter = role ? { role } : {};
 
-    // ✅ OPTIMIZED: Use lean() for read-only queries
+    // OPTIMIZED: Use lean() for read-only queries
     const users = await User.find(filter)
       .select("-password")
       .sort({ createdAt: -1 })
@@ -276,7 +276,7 @@ router.put("/halls/:id/approve", async (req, res) => {
 // @access Private (Admin)
 router.get("/bookings", async (req, res) => {
   try {
-    // ✅ OPTIMIZED: Use lean() for read-only queries
+    // OPTIMIZED: Use lean() for read-only queries
     const bookings = await Booking.find()
       .populate("user", "name email phone")
       .populate("hall", "name location")
