@@ -190,29 +190,14 @@ router.post(
   [
     auth,
     authorize("hall_owner", "admin"),
-    upload.array("images", 15),
-    parseFormData,
     body("name").trim().notEmpty().withMessage("Hall name is required"),
-    body("description")
-      .trim()
-      .notEmpty()
-      .withMessage("Description is required"),
-    body("location.address")
-      .trim()
-      .notEmpty()
-      .withMessage("Address is required"),
+    body("description").trim().notEmpty().withMessage("Description is required"),
+    body("location.address").trim().notEmpty().withMessage("Address is required"),
     body("location.city").trim().notEmpty().withMessage("City is required"),
     body("location.state").trim().notEmpty().withMessage("State is required"),
-    body("location.pincode")
-      .trim()
-      .notEmpty()
-      .withMessage("Pincode is required"),
-    body("capacity")
-      .isInt({ min: 1 })
-      .withMessage("Capacity must be at least 1"),
-    body("pricePerHour")
-      .isFloat({ min: 0 })
-      .withMessage("Price must be a positive number"),
+    body("location.pincode").trim().notEmpty().withMessage("Pincode is required"),
+    body("capacity").isInt({ min: 1 }).withMessage("Capacity must be at least 1"),
+    body("pricePerHour").isFloat({ min: 0 }).withMessage("Price must be a positive number"),
   ],
   async (req, res) => {
     try {
@@ -221,15 +206,15 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
+      // Accept images as array of URLs (direct Cloudinary upload from frontend)
+      const images = Array.isArray(req.body.images) ? req.body.images : [];
+
       const hallData = {
         ...req.body,
         owner: req.user._id,
-        images: req.files
-          ? req.files.map((file) => file.path) // Cloudinary returns full URL in file.path
-          : [],
+        images,
       };
 
-      // Remove isApproved if it exists in req.body to ensure it's undefined (pending)
       delete hallData.isApproved;
 
       const hall = new Hall(hallData);
