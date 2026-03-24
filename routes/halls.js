@@ -316,6 +316,14 @@ router.put(
       // Remove isApproved from update data - only admin can change approval status
       delete updateData.isApproved;
 
+      // Preserve isAvailable — only update if explicitly sent as a boolean
+      if (typeof updateData.isAvailable === 'undefined' || updateData.isAvailable === null) {
+        delete updateData.isAvailable;
+      } else {
+        // Convert string "true"/"false" from form submissions to boolean
+        updateData.isAvailable = updateData.isAvailable === true || updateData.isAvailable === 'true';
+      }
+
       // If hall was rejected, reset to pending for admin re-review
       if (hall.isApproved === "rejected" || hall.isApproved === false) {
         hall.isApproved = "pending";
