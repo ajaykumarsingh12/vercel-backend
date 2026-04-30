@@ -241,94 +241,140 @@ router.put("/profile", auth, async (req, res) => {
   }
 });
 
-// @route POST /api/auth/verify-email
-// @desc Verify if email exists in the system
+// In-memory OTP store: { email -> { otp, expiresAt, verified } }
+const otpStore = new Map();
+
+// @route POST /api/auth/send-otp
+// @desc Send OTP to email for password reset (only if email exists)
 // @access Public
 router.post(
-  "/verify-email",
+  "/send-otp",
+  [body("email").isEmail().withMessage("Valid email required")],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, message: "Please provide a valid email address" });
+      }
+
+      const { email } = req.body;
+      const normalizedEmail = email.toLowerCase().trim();
+
+      const user = await User.findOne({ email: normalizedEmail });
+      if (!user) {
+        return res.status(404).json({ success: false, message: "No account found with this email address." });
+      }
+
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+      otpStore.set(normalizedEmail, { otp, expiresAt, verified: false });
+
+      const { sendPasswordResetOTP } = require("../utils/emailService");
+      const emailResult = await sendPasswordResetOTP(normalizedEmail, otp);
+
+      if (!emailResult.success) {
+        return res.status(500).json({ success: false, message: "Failed to send OTP email. Please try again." });
+      }
+
+      res.json({ success: true, message: "OTP sent to your email address." });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  }
+);
+
+// @route POST /api/auth/verify-otp
+// @desc Verify OTP entered by user
+// @access Public
+router.post(
+  "/verify-otp",
   [
-    body("email")
-      .isEmail()
-      .withMessage("Valid email required"),
+    body("email").isEmail().withMessage("Valid email required"),
+    body("otp").notEmpty().withMessage("OTP is required"),
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: "Please provide a valid email address",
-        });
+        return res.status(400).json({ success: false, message: errors.array()[0]?.msg });
       }
 
-      const { email } = req.body;
+      const { email, otp } = req.body;
+      const normalizedEmail = email.toLowerCase().trim();
 
-      // Simple case-insensitive email check
-      const user = await User.findOne({ 
-        email: email.toLowerCase().trim() 
-      });
+      const record = otpStore.get(normalizedEmail);
+      if (!record) {
+        return res.status(400).json({ success: false, message: "OTP not found. Please request a new OTP." });
+      }
 
-      res.json({
-        success: true,
-        exists: !!user,
-      });
+      if (Date.now() > record.expiresAt) {
+        otpStore.delete(normalizedEmail);
+        return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+      }
+
+      if (record.otp !== otp.trim()) {
+        return res.status(400).json({ success: false, message: "Invalid OTP. Please check and try again." });
+      }
+
+      // Mark OTP as verified
+      otpStore.set(normalizedEmail, { ...record, verified: true });
+
+      res.json({ success: true, message: "OTP verified successfully." });
     } catch (error) {
       console.error(error);
-      res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
+      res.status(500).json({ success: false, message: "Server error" });
     }
   }
 );
 
 // @route POST /api/auth/reset-password
-// @desc Reset user password
+// @desc Reset user password (requires OTP to be verified first)
 // @access Public
 router.post(
   "/reset-password",
   [
-    body("email")
-      .isEmail()
-      .normalizeEmail()
-      .withMessage("Valid email required"),
-    body("newPassword")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters"),
+    body("email").isEmail().normalizeEmail().withMessage("Valid email required"),
+    body("newPassword").isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: errors.array()[0]?.msg || "Validation error",
-        });
+        return res.status(400).json({ success: false, message: errors.array()[0]?.msg || "Validation error" });
       }
 
       const { email, newPassword } = req.body;
+      const normalizedEmail = email.toLowerCase().trim();
 
-      const user = await User.findOne({ email });
+      // Check OTP was verified
+      const record = otpStore.get(normalizedEmail);
+      if (!record || !record.verified) {
+        return res.status(403).json({ success: false, message: "OTP not verified. Please complete OTP verification first." });
+      }
+
+      if (Date.now() > record.expiresAt) {
+        otpStore.delete(normalizedEmail);
+        return res.status(400).json({ success: false, message: "OTP session expired. Please start over." });
+      }
+
+      const user = await User.findOne({ email: normalizedEmail });
       if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
+        return res.status(404).json({ success: false, message: "User not found" });
       }
 
       user.password = newPassword;
       await user.save();
 
-      res.json({
-        success: true,
-        message: "Password reset successfully",
-      });
+      // Clear OTP after successful reset
+      otpStore.delete(normalizedEmail);
+
+      res.json({ success: true, message: "Password reset successfully" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
+      res.status(500).json({ success: false, message: "Server error" });
     }
   }
 );

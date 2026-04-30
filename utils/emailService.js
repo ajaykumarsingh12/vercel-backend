@@ -432,8 +432,63 @@ const sendTelegramNotification = async (message) => {
   }
 };
 
+// Send OTP email for password reset
+const sendPasswordResetOTP = async (email, otp) => {
+  try {
+    const transporter = createTransporter();
+    if (!transporter) {
+      return { success: false, message: 'Email service not configured' };
+    }
+
+    const mailOptions = {
+      from: { name: 'BookMyHall', address: process.env.EMAIL_USER },
+      to: email,
+      subject: '🔐 Password Reset OTP - BookMyHall',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .otp-box { background: white; border: 2px dashed #667eea; border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0; }
+            .otp-code { font-size: 36px; font-weight: bold; color: #667eea; letter-spacing: 8px; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 13px; }
+          </style>
+        </head>
+        <body>
+          <div class="header"><h1>🔐 Password Reset</h1><p>Your OTP for password reset</p></div>
+          <div class="content">
+            <p>You requested to reset your BookMyHall password. Use the OTP below:</p>
+            <div class="otp-box">
+              <p style="margin:0;color:#666;">Your OTP Code</p>
+              <div class="otp-code">${otp}</div>
+              <p style="margin:5px 0 0;color:#e74c3c;font-size:13px;">Valid for 10 minutes only</p>
+            </div>
+            <p style="background:#fff3cd;padding:12px;border-radius:5px;border-left:4px solid #ffc107;">
+              <strong>⚠️ Security Notice:</strong> Never share this OTP with anyone. BookMyHall will never ask for your OTP.
+            </p>
+            <p>If you did not request this, please ignore this email. Your password will remain unchanged.</p>
+          </div>
+          <div class="footer"><p>&copy; ${new Date().getFullYear()} BookMyHall. All rights reserved.</p></div>
+        </body>
+        </html>
+      `,
+      text: `Your BookMyHall password reset OTP is: ${otp}\nValid for 10 minutes.\nIf you did not request this, ignore this email.`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error sending OTP email:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendBookingNotificationEmail,
   sendBookingConfirmationToCustomer,
   sendTelegramNotification,
+  sendPasswordResetOTP,
 };
